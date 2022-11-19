@@ -43,8 +43,17 @@ const availableFoods: CatFood[] = [
 
 app.post('/cat/food/:catId', async (req: Request, res: Response) => {
     let response = await fetch(`http://localhost:8080/cats/${req.params["catId"]}`);
-    console.log(await response.json());
-    res.send('Express + TypeScript Server');
+    let jsonRes = await response.json();
+    if (jsonRes.status >= 400) {
+        res.status(500)
+            .send(
+                {
+                    message: "falhou"
+                }
+            )
+    }
+
+    res.send()
 });
 
 app.listen(port);
