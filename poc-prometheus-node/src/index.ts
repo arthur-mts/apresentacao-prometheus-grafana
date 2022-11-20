@@ -1,7 +1,18 @@
 import express, {Express, Request, Response} from 'express';
+import {Registry, Counter} from 'prom-client';
+import promBundle from 'express-prom-bundle';
 
 const app: Express = express();
 const port = 8089;
+
+const register = new Registry();
+
+const httpRequestCounter = new Counter({
+    name: 'http_server_requests_seconds_count',
+    registers: [register],
+    help: 'Contador de requisições',
+    labelNames: ['status', 'uri', 'method']
+})
 
 type CatFoodBill = {
     value: number,
@@ -40,11 +51,28 @@ const availableFoods: CatFood[] = [
     }
 ]
 
+app.use(
+    promBundle({
+        includeMethod: true,
+        includePath: true,
+        promRegistry: register,
+        promClient: {
+            collectDefaultMetrics: {register, labels: {app_name: "poc-prometheus-node"}}
+        }
+    })
+)
+
+// Métricas padrão
+// app.get('/metrics', async (req, res) => {
+//     res.send(await register.metrics())
+// });
 
 app.post('/cat/food/:catId', async (req: Request, res: Response) => {
     let response = await fetch(`http://localhost:8080/cats/${req.params["catId"]}`);
     let jsonRes = await response.json();
+    let labels = {status: 200, uri: '/cat/food/:catId', method: 'POST'};
     if (jsonRes.status >= 400) {
+        labels.status = 500;
         res.status(500)
             .send(
                 {
@@ -52,6 +80,7 @@ app.post('/cat/food/:catId', async (req: Request, res: Response) => {
                 }
             )
     }
+    httpRequestCounter.inc(labels)
 
     res.send()
 });
