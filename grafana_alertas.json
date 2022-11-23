@@ -1,0 +1,67 @@
+{
+    "template_files": {
+      "Mensagem": "{{ define \"mymessage\" }}\n  {{ if gt (len .Alerts.Firing) 0 }}\n    {{ len .Alerts.Firing }} firing:\n    {{ range .Alerts.Firing }} {{ template \"myalert\" .}} {{ end }}\n  {{ end }}\n  {{ if gt (len .Alerts.Resolved) 0 }}\n    {{ len .Alerts.Resolved }} resolved:\n    {{ range .Alerts.Resolved }} {{ template \"myalert\" .}} {{ end }}\n  {{ end }}\n{{ end }}",
+      "Template de mensagem de erro": "{{ define \"myalert\" }}\n[{{.Status}}] {{ .Labels.alertname }} \n{{ .Annotations.AlertValues }}\n\n{{ if gt (len .DashboardURL) 0 }}\n  Go to dashboard: {{.DashboardURL}}\n{{end}}\n\n{{ if gt (len .SilenceURL) 0 }}\n  Silence this alarm: {{.SilenceURL}}\n{{ end }}\n{{ end }}"
+    },
+    "template_file_provenances": {},
+    "alertmanager_config": {
+      "route": {
+        "receiver": "Canal do discord",
+        "group_by": [
+          "grafana_folder",
+          "alertname"
+        ],
+        "routes": [
+          {
+            "receiver": "Canal do discord",
+            "object_matchers": [
+              [
+                "severity",
+                "=",
+                "warning"
+              ]
+            ]
+          }
+        ],
+        "group_wait": "10s"
+      },
+      "templates": [
+        "Mensagem",
+        "Template de mensagem de erro"
+      ],
+      "receivers": [
+        {
+          "name": "grafana-default-email",
+          "grafana_managed_receiver_configs": [
+            {
+              "uid": "VNSy52dVk",
+              "name": "email receiver",
+              "type": "email",
+              "disableResolveMessage": false,
+              "settings": {
+                "addresses": "<example@email.com>"
+              },
+              "secureFields": {}
+            }
+          ]
+        },
+        {
+          "name": "Canal do discord",
+          "grafana_managed_receiver_configs": [
+            {
+              "uid": "VNSs5hO4zz",
+              "name": "Canal do discord",
+              "type": "discord",
+              "disableResolveMessage": false,
+              "settings": {
+                "message": "Alert summary:{{ template \"mymessage\" . }}",
+                "url": "https://discord.com/api/webhooks/1044024854216712253/OUG53v3dTU63-Vgp4oOTNL2UiWQCCmBNR2uoN4_yp5UM3tbtViAhLAcPMWplBxgK4HuV",
+                "use_discord_username": false
+              },
+              "secureFields": {}
+            }
+          ]
+        }
+      ]
+    }
+  }

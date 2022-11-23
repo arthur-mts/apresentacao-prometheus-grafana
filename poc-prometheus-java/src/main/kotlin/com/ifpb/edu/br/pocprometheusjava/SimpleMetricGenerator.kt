@@ -13,6 +13,7 @@ class SimpleMetricGenerator(collectorRegistry: CollectorRegistry) {
 
     @Scheduled(fixedDelay = 1000)
     fun metricGenerator() {
+//        val animacao = 1.2
         val animacao = floor(Math.random() * 10)
         println(animacao)
         this.gauge.set(animacao)
